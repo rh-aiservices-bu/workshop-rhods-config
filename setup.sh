@@ -12,10 +12,12 @@ oc process -n redhat-ods-applications -f "${DIR}/jupyterhub-idle-culler.yaml" \
 oc apply -n redhat-ods-applications -f "${DIR}/odh-dashboard-config.yaml"
 oc rollout restart deployment/odh-dashboard -n redhat-ods-applications
 
-oc adm groups new rhods-admins || echo "rhods-admins group already exists"
+oc adm groups new rhods-admins ${ADMIN_USERS} || echo "rhods-admins group already exists"
 oc patch configmap rhods-groups-config -n redhat-ods-applications --patch-file "${DIR}/rhods-groups-config-patch.yaml"
+
 oc patch configmap jupyter-singleuser-profiles -n redhat-ods-applications --patch-file "${DIR}/jupyter-singleuser-profiles-patch.yaml"
 oc patch configmap rhods-jupyterhub-sizes -n redhat-ods-applications --patch-file "${DIR}/rhods-jupyterhub-sizes-patch.yaml"
+
 oc rollout latest deploymentconfig/jupyterhub -n redhat-ods-applications
 
 if [ -n "${AUTOSCALE}" ]
