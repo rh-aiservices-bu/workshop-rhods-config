@@ -1,0 +1,46 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: autoscaling-buffer
+parameters:
+  - name: AUTOSCALER_REPLICAS
+    value: '4'
+  - name: AUTOSCALER_CPU
+    value: '4'
+  - name: AUTOSCALER_MEMORY
+    value: '16Gi'
+objects:
+  - kind: Deployment
+    apiVersion: apps/v1
+    metadata:
+      name: autoscaling-buffer
+    spec:
+      replicas: ${{AUTOSCALER_REPLICAS}}
+      selector:
+        matchLabels:
+          app: autoscaling-buffer
+      template:
+        metadata:
+          labels:
+            app: autoscaling-buffer
+        spec:
+          containers:
+            - name: autoscaling-buffer
+              image: 'gcr.io/google_containers/pause-amd64:3.2'
+              resources:
+                limits:
+                  cpu: ${AUTOSCALER_CPU}
+                  memory: ${AUTOSCALER_MEMORY}
+                requests:
+                  cpu: ${AUTOSCALER_CPU}
+                  memory: ${AUTOSCALER_MEMORY}
+              imagePullPolicy: IfNotPresent
+          restartPolicy: Always
+          priorityClassName: autoscaling-buffer
+  - apiVersion: scheduling.k8s.io/v1
+    description: This priority class is to be used by the autoscaling buffer pod only
+    kind: PriorityClass
+    metadata:
+      name: autoscaling-buffer
+    preemptionPolicy: PreemptLowerPriority
+    value: -5
